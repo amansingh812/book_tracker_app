@@ -1,0 +1,70 @@
+name: readora
+description: Readora — an AI-powered reading companion. Read more. Remember more.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+# NOTE ON VERSIONS
+# These constraints were written against the packages available at scaffold time.
+# If `flutter pub get` cannot resolve, run:
+#     flutter pub upgrade --major-versions
+# and commit the resulting pubspec.lock. Prefer upgrading over loosening.
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # --- state & navigation ---------------------------------------------------
+  flutter_bloc: ^8.1.6
+  bloc_concurrency: ^0.2.5
+  equatable: ^2.0.5
+  get_it: ^7.7.0
+  go_router: ^14.2.0
+
+  # --- backend --------------------------------------------------------------
+  supabase_flutter: ^2.5.6
+
+  # --- local storage (offline-first source of truth) ------------------------
+  # If the Isar build breaks on a newer AGP/Xcode, swap to the community fork:
+  #   isar: ^3.3.0-dev.0  (isar_community)  — see docs/ARCHITECTURE.md > Risks
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.3
+
+  # --- platform & utility ---------------------------------------------------
+  connectivity_plus: ^6.0.3
+  cached_network_image: ^3.3.1
+  mobile_scanner: ^5.1.1
+  flutter_local_notifications: ^17.2.1
+  timezone: ^0.9.4
+  purchases_flutter: ^6.29.0
+  shared_preferences: ^2.2.3
+  package_info_plus: ^8.0.0
+  device_info_plus: ^10.1.0
+  uuid: ^4.4.0
+  collection: ^1.18.0
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  build_runner: ^2.4.11
+  isar_generator: ^3.1.0+1
+  very_good_analysis: ^6.0.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  generate: true # builds l10n from lib/l10n/*.arb
+  assets:
+    - assets/images/
+    - assets/icons/
+  # Fonts are declared once the design export lands — see docs/ARCHITECTURE.md
+  # > "Design tokens". Do not hardcode a font family anywhere but tokens/typography.dart.
