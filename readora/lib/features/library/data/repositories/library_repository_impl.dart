@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:readora/core/error/error_mapper.dart';
 import 'package:readora/core/sync/outbox.dart';
 import 'package:readora/core/sync/sync_engine.dart';

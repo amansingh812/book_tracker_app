@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:readora/core/sync/syncable_table.dart';
 import 'package:readora/features/library/data/models/library_models.dart';
 

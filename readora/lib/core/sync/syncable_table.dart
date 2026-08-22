@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 /// Contract every synced feature implements once, in its data layer.
 ///

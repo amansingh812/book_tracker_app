@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:readora/core/sync/sync_models.dart';
 
 /// The write-ahead log between the app and Supabase.

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:readora/core/logging/app_logger.dart';
 import 'package:readora/core/sync/outbox.dart';
 import 'package:readora/core/sync/sync_models.dart';
