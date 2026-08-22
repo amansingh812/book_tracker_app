@@ -40,7 +40,10 @@ class LibraryRepositoryImpl implements LibraryRepository {
   final SupabaseClient _supabase;
   final AuthRepository _auth;
 
-  String get _userId => _auth.current?.id ?? 'local';
+  /// Guests are anonymous Supabase users, so there is always a real uid here
+  /// once the app is past the auth gate. The fallback only exists so a stray
+  /// call during sign-out cannot throw — it should never match any row.
+  String get _userId => _auth.current?.id ?? '__no_session__';
 
   // -------------------------------------------------------------------------
   // Reads — always local

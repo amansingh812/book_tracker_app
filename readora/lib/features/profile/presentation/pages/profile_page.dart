@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:readora/core/config/brand_config.dart';
 import 'package:readora/core/config/env.dart';
 import 'package:readora/design_system/tokens/readora_spacing.dart';
@@ -44,7 +45,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: Spacing.lg),
-                if (isGuest)
+                if (isGuest) ...[
                   GlassCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,18 +59,19 @@ class ProfilePage extends StatelessWidget {
                         ),
                         const SizedBox(height: Spacing.lg),
                         FilledButton(
-                          onPressed: () {}, // routed in M2
+                          onPressed: () => context.push('/auth/sign-in'),
                           child: const Text('Create an account'),
                         ),
                       ],
                     ),
-                  )
-                else
+                  ),
+                ] else ...[
                   OutlinedButton(
                     onPressed: () =>
                         context.read<AuthBloc>().add(const AuthSignOutRequested()),
                     child: const Text('Sign out'),
                   ),
+                ],
                 const SizedBox(height: Spacing.xxl),
                 Text(
                   '${BrandConfig.appName} · ${Env.flavorName} build',

@@ -52,7 +52,6 @@ Future<void> configureDependencies() async {
   sl.registerSingleton<AuthRepository>(
     AuthRepositoryImpl(
       supabase: sl<SupabaseClient>(),
-      prefs: prefs,
       syncEngine: sl<SyncEngine>(),
     ),
   );

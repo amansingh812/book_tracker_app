@@ -72,8 +72,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onGuest(AuthGuestRequested event, Emitter<AuthState> emit) async {
-    final user = await _repository.continueAsGuest();
-    emit(state.copyWith(status: AuthStatus.guest, user: user, clearMessages: true));
+    emit(state.copyWith(isSubmitting: true, clearMessages: true));
+    try {
+      final user = await _repository.continueAsGuest();
+      emit(state.copyWith(status: AuthStatus.guest, user: user, isSubmitting: false));
+    } catch (error) {
+      emit(state.copyWith(isSubmitting: false, failure: mapError(error)));
+    }
   }
 
   Future<void> _onSignOut(AuthSignOutRequested event, Emitter<AuthState> emit) async {

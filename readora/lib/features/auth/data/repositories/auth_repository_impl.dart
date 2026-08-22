@@ -5,16 +5,13 @@ import 'package:readora/core/error/failure.dart';
 import 'package:readora/core/sync/sync_engine.dart';
 import 'package:readora/features/auth/domain/entities/app_user.dart';
 import 'package:readora/features/auth/domain/repositories/auth_repository.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required SupabaseClient supabase,
-    required SharedPreferences prefs,
     required SyncEngine syncEngine,
   })  : _supabase = supabase,
-        _prefs = prefs,
         _syncEngine = syncEngine {
     _controller.add(current);
     _authSub = _supabase.auth.onAuthStateChange.listen((_) {
@@ -22,10 +19,7 @@ class AuthRepositoryImpl implements AuthRepository {
     });
   }
 
-  static const _guestKey = 'readora.guest_mode';
-
   final SupabaseClient _supabase;
-  final SharedPreferences _prefs;
   final SyncEngine _syncEngine;
 
   final _controller = StreamController<AppUser?>.broadcast();
@@ -37,14 +31,32 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   AppUser? get current {
     final user = _supabase.auth.currentUser;
-    if (user != null) {
-      return AppUser(
+    return user == null ? null : _fromSupabase(user);
+  }
+
+  AppUser _fromSupabase(User user) => AppUser(
         id: user.id,
         email: user.email,
         displayName: user.userMetadata?['display_name'] as String?,
+        isGuest: user.isAnonymous,
       );
-    }
-    return _prefs.getBool(_guestKey) ?? false ? AppUser.guest : null;
+
+  @override
+  Future<AppUser> continueAsGuest() {
+    return guard(() async {
+      // Already have a session (anonymous or not) — reuse it rather than
+      // orphaning the reader's existing library behind a second uid.
+      final existing = _supabase.auth.currentUser;
+      if (existing != null) return _fromSupabase(existing);
+
+      final res = await _supabase.auth.signInAnonymously();
+      final user = res.user;
+      if (user == null) {
+        throw const AuthFailure('Could not start a guest session. Check your connection.');
+      }
+      unawaited(_syncEngine.syncNow());
+      return _fromSupabase(user);
+    });
   }
 
   @override
@@ -52,9 +64,31 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     String? displayName,
-  }) async {
+  }) {
     return guard(() async {
-      final wasGuest = _prefs.getBool(_guestKey) ?? false;
+      final existing = _supabase.auth.currentUser;
+
+      // Guest upgrade path. Supabase attaches the credentials to the SAME
+      // anonymous user, so every book already tracked stays theirs and nothing
+      // needs migrating.
+      //
+      // NOTE: if "Confirm email" is enabled in Supabase Auth settings, the email
+      // is not applied until the reader clicks the link — the password is set
+      // immediately, but the account stays anonymous until confirmation.
+      if (existing != null && existing.isAnonymous) {
+        final res = await _supabase.auth.updateUser(
+          UserAttributes(
+            email: email,
+            password: password,
+            data: {if (displayName != null) 'display_name': displayName},
+          ),
+        );
+        final user = res.user;
+        if (user == null) {
+          throw const AuthFailure('Could not finish creating your account.');
+        }
+        return _fromSupabase(user);
+      }
 
       final res = await _supabase.auth.signUp(
         email: email,
@@ -65,11 +99,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (user == null) {
         throw const AuthFailure('Check your inbox to confirm your email, then sign in.');
       }
-
-      if (wasGuest) await migrateGuestData(user.id);
-      await _prefs.setBool(_guestKey, false);
-
-      return AppUser(id: user.id, email: user.email, displayName: displayName);
+      return _fromSupabase(user);
     });
   }
 
@@ -78,16 +108,11 @@ class AuthRepositoryImpl implements AuthRepository {
     return guard(() async {
       final res = await _supabase.auth.signInWithPassword(email: email, password: password);
       final user = res.user!;
-      await _prefs.setBool(_guestKey, false);
       // A fresh device must pull the whole library, not just what changed since
       // some cursor left over from a previous account.
       await _syncEngine.resetCursors();
       unawaited(_syncEngine.syncNow());
-      return AppUser(
-        id: user.id,
-        email: user.email,
-        displayName: user.userMetadata?['display_name'] as String?,
-      );
+      return _fromSupabase(user);
     });
   }
 
@@ -96,25 +121,8 @@ class AuthRepositoryImpl implements AuthRepository {
       guard(() => _supabase.auth.resetPasswordForEmail(email));
 
   @override
-  Future<AppUser> continueAsGuest() async {
-    await _prefs.setBool(_guestKey, true);
-    _controller.add(AppUser.guest);
-    return AppUser.guest;
-  }
-
-  @override
-  Future<void> migrateGuestData(String newUserId) async {
-    // Guest rows were written locally with user_id == 'local'. Re-stamp them
-    // with the real uid and queue every one for upload. Implemented per feature
-    // via LocalMigrator (see docs/ARCHITECTURE.md > "Guest to account").
-    await _syncEngine.resetCursors();
-    unawaited(_syncEngine.syncNow());
-  }
-
-  @override
   Future<void> signOut() async {
     await guard(() => _supabase.auth.signOut());
-    await _prefs.setBool(_guestKey, false);
     await _syncEngine.resetCursors();
     _controller.add(null);
   }

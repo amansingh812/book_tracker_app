@@ -6,9 +6,12 @@ abstract interface class AuthRepository {
   /// Emits on every identity change, including the initial value.
   Stream<AppUser?> get changes;
 
-  /// Current identity, or null when the user has not chosen guest or account yet.
+  /// Current identity, or null when nobody has started a session yet.
   AppUser? get current;
 
+  /// Creates the account. If the caller is currently a guest (anonymous), the
+  /// credentials are attached to that SAME user, so everything already tracked
+  /// stays theirs — no migration step exists, by design.
   Future<AppUser> signUp({
     required String email,
     required String password,
@@ -19,12 +22,9 @@ abstract interface class AuthRepository {
 
   Future<void> sendPasswordReset(String email);
 
-  /// Enters local-only mode. No network calls are made until the user signs up.
+  /// Starts an anonymous Supabase session. The reader gets a real uid and JWT,
+  /// so RLS, sync, and the Edge Functions all work without an email address.
   Future<AppUser> continueAsGuest();
-
-  /// Moves everything created in guest mode onto the freshly created account.
-  /// Called exactly once, immediately after a guest signs up.
-  Future<void> migrateGuestData(String newUserId);
 
   Future<void> signOut();
 }

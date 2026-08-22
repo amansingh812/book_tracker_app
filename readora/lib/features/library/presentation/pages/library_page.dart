@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:readora/design_system/tokens/readora_spacing.dart';
 import 'package:readora/design_system/widgets/book_cover.dart';
 import 'package:readora/design_system/widgets/glass_card.dart';
@@ -17,6 +18,11 @@ class LibraryPage extends StatelessWidget {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(title: const Text('Library')),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => context.push('/library/add'),
+            icon: const Icon(Icons.add),
+            label: const Text('Add a book'),
+          ),
           body: AmbientBackground(
             child: Column(
               children: [
