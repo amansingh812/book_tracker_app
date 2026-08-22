@@ -1,1 +1,6 @@
 .vscode/
+*.log
+readora/ios/Pods/
+readora/ios/.symlinks/
+readora/ios/Flutter/Flutter.framework
+readora/ios/Flutter/Flutter.podspec
